@@ -1,6 +1,5 @@
 package com.tezish.demo.util;
 
-import com.tezish.demo.services.token.TokenService;
 import com.tezish.demo.services.userDetails.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,7 +15,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Map;
 
 @Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
@@ -27,8 +25,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    TokenService tokenService;
+//    @Autowired
+//    TokenService tokenService;
 
     @Override
     protected void doFilterInternal(
@@ -52,18 +50,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-                    // get token from redis and check if it is valid
-                    Map<String, String> userTokens = tokenService.getUserTokensFromRedis(userDetails);
-                    String accessToken = userTokens.get("accessToken");
-                    String accessTokenExpired = userTokens.get("accessTokenExpired");
-                    String accessTokenRevoked = userTokens.get("accessTokenRevoked");
+//                    // get token from redis and check if it is valid
+//                    Map<String, String> userTokens = tokenService.getUserTokensFromRedis(userDetails);
+//                    String accessToken = userTokens.get("accessToken");
+//                    String accessTokenExpired = userTokens.get("accessTokenExpired");
+//                    String accessTokenRevoked = userTokens.get("accessTokenRevoked");
+//
+//                    boolean isValidToken =
+//                            jwt.equals(accessToken) &&
+//                                    "false".equals(accessTokenExpired) &&
+//                                    "false".equals(accessTokenRevoked);
 
-                    boolean isValidToken =
-                            jwt.equals(accessToken) &&
-                                    "false".equals(accessTokenExpired) &&
-                                    "false".equals(accessTokenRevoked);
-
-                    if (jwtUtil.isTokenValid(jwt, userDetails) && isValidToken) {
+                    if (jwtUtil.isTokenValid(jwt, userDetails)) {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,

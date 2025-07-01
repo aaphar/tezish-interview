@@ -7,8 +7,8 @@ import com.tezish.demo.dto.response.JWTTokenResponse;
 import com.tezish.demo.enums.ERole;
 import com.tezish.demo.model.User;
 import com.tezish.demo.repository.UserRepository;
-import com.tezish.demo.services.token.TokenService;
 import com.tezish.demo.services.userDetails.CustomUserDetails;
+import com.tezish.demo.util.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,18 +26,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
-    private final TokenService tokenService;
+    //    private final TokenService tokenService;
+    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
     public AuthenticationServiceImpl(
             UserRepository userRepository,
             AuthenticationManager authenticationManager,
-            TokenService tokenService,
+//            TokenService tokenService,
+            JwtUtil jwtUtil,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.authenticationManager = authenticationManager;
-        this.tokenService = tokenService;
+//        this.tokenService = tokenService;
+        this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -78,7 +81,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepository.save(user);
         UserDetails userDetails = CustomUserDetails.build(user);
 
-        JWTTokenResponse jwtTokenResponse = tokenService.saveUserTokensToRedis(userDetails);
+//        JWTTokenResponse jwtTokenResponse = tokenService.saveUserTokensToRedis(userDetails);
+        String jwtTokenResponse = jwtUtil.generateJwtToken(userDetails);
 
         return AuthenticationResponse.builder()
                 .id(user.getId())
@@ -86,8 +90,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
                 .imageUrl(user.getImageUrl())
-                .accessToken(jwtTokenResponse.getAccessToken())
-                .refreshToken(jwtTokenResponse.getRefreshToken())
+                .accessToken(jwtTokenResponse)
+//                .refreshToken(jwtTokenResponse.getRefreshToken())
                 .build();
     }
 
@@ -104,7 +108,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserDetails userDetails = CustomUserDetails.build(user);
-            JWTTokenResponse jwtTokenResponse = tokenService.saveUserTokensToRedis(userDetails);
+//            JWTTokenResponse jwtTokenResponse = tokenService.saveUserTokensToRedis(userDetails);
+            String jwtTokenResponse = jwtUtil.generateJwtToken(userDetails);
 
             return AuthenticationResponse.builder()
                     .id(user.getId())
@@ -112,8 +117,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .fullName(user.getFullName())
                     .role(user.getRole().name())
                     .imageUrl(user.getImageUrl())
-                    .accessToken(jwtTokenResponse.getAccessToken())
-                    .refreshToken(jwtTokenResponse.getRefreshToken())
+                    .accessToken(jwtTokenResponse)
+//                    .refreshToken(jwtTokenResponse.getRefreshToken())
                     .build();
         } catch (Exception e) {
             log.error("Authentication failed for user {}: {}", request.getEmail(), e.getMessage());
@@ -131,7 +136,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         try {
             UserDetails userDetails = CustomUserDetails.build(user);
-            tokenService.revokeAllUserTokensInRedis(userDetails);
+//            tokenService.revokeAllUserTokensInRedis(userDetails);
+            SecurityContextHolder.clearContext();
             return true;
         } catch (Exception e) {
             log.error("Logout failed for user {}: {}", email, e.getMessage());
